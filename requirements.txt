@@ -1,4 +1,4 @@
 gradio
-tensorflow
+tensorflow==2.13.0
 numpy
 pillow
