@@ -1,8 +1,8 @@
-
 import gradio as gr
 import tensorflow as tf
 import numpy as np
 from PIL import Image
+import os
 
 model = tf.keras.models.load_model("hemolysis_model.h5")
 
@@ -29,4 +29,6 @@ demo = gr.Interface(
     title="AI Blood Sample Hemolysis Detector"
 )
 
-demo.launch()
+port = int(os.environ.get("PORT", 7860))
+
+demo.launch(server_name="0.0.0.0", server_port=port)
