@@ -4,7 +4,7 @@ import numpy as np
 from PIL import Image
 import os
 
-model = tf.keras.models.load_model("hemolysis_model.h5")
+model = tf.keras.models.load_model("hemolysis_model.h5", compile=False)
 
 def predict(img):
     img = img.resize((224,224))
@@ -18,7 +18,7 @@ def predict(img):
         confidence = prediction
     else:
         label = "Possible Hemolysis"
-        confidence = 1-prediction
+        confidence = 1 - prediction
 
     return f"Prediction: {label}\nConfidence: {confidence:.2f}"
 
@@ -30,5 +30,4 @@ demo = gr.Interface(
 )
 
 port = int(os.environ.get("PORT", 7860))
-
 demo.launch(server_name="0.0.0.0", server_port=port)
