@@ -5,28 +5,41 @@ import tensorflow as tf
 from tensorflow.keras.layers import InputLayer
 
 print("Starting app...")
+print("TF version:", tf.__version__)
 
-# ── THE FIX ─────────────────────────────────────────────────────────────────
-# Your model was saved with old Keras which used 'batch_shape'.
-# TF 2.11+ renamed it to 'batch_input_shape' and crashes on load.
-# This shim silently renames the key during deserialization.
+# ── Shim 1: fixes 'batch_shape' from old-saved models ───────────────────────
 class FixedInputLayer(InputLayer):
     def __init__(self, **kwargs):
         if "batch_shape" in kwargs:
             kwargs["batch_input_shape"] = kwargs.pop("batch_shape")
         super().__init__(**kwargs)
 
+# ── Shim 2: fixes 'Unknown dtype policy: DTypePolicy' ───────────────────────
+class DTypePolicy:
+    def __init__(self, name="float32"):
+        self.name = name
+    def get_config(self):
+        return {"name": self.name}
+    @classmethod
+    def from_config(cls, config):
+        return cls(**config)
+
+custom_objects = {
+    "InputLayer": FixedInputLayer,
+    "DTypePolicy": DTypePolicy,
+}
+
 print("Loading model...")
 try:
     model = tf.keras.models.load_model(
         "hemolysis_model.h5",
-        custom_objects={"InputLayer": FixedInputLayer},
+        custom_objects=custom_objects,
         compile=False,
     )
     print("Model loaded successfully.")
 except Exception as e:
     print("FATAL: Model failed to load:", e)
-    raise  # Re-raise so you see the real error in Render logs
+    raise
 
 def predict(img):
     img = img.resize((224, 224))
